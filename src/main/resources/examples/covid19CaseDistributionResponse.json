@@ -1,0 +1,31 @@
+[
+	{
+     "dateRep": "2020-12-14",
+	   "day": 14,
+	   "month": 12,
+	   "year": 2020,
+	   "cases": 746,
+	   "deaths": 6,
+	   "countriesAndTerritories": "Afghanistan",
+	   "geoId": "AF",
+	   "countryTerritoryCode": "AFG",
+	   "popData2019": 38041757,
+	   "continentExp": "Asia",
+	   "cumulative14DaysCasesPer100000": 9.01377925
+	},
+	{
+     "dateRep": "2020-12-13",
+	   "day": 13,
+	   "month": 12,
+	   "year": 2020,
+	   "cases": 331,
+	   "deaths": 1,
+	   "countriesAndTerritories": "Uruguay",
+	   "geoId": "UY",
+	   "countryTerritoryCode": "URY",
+	   "popData2019": 3461731,
+	   "continentExp": "America",
+	   "cumulative14DaysCasesPer100000": 105.98743808
+	}
+	
+]

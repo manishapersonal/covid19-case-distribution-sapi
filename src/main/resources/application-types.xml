@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="Covid19CaseDistributionResponseCSV" format="csv">
+      <types:shape format="weave" example="examples/covid19CaseDistributionResponse-1.csv"><![CDATA[%dw 2.0
+
+type Covid19CaseDistributionResponseCSV = Array<{|  dateRep: String,   day: String,   month: String,   year: String,   cases: String,   deaths: String,   countriesAndTerritories: String,   geoId: String,   countryterritoryCode: String,   popData2019: String,   continentExp: String,   "Cumulative_number_for_14_days_of_COVID-19_cases_per_100000": String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0",
+"separator": ","}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+        <types:property name="separator" value=","/>
+      </types:properties>
+    </types:type>
+    <types:type name="Covid19CaseDistributionResponseJSON" format="json">
+      <types:shape format="weave" example="examples/covid19CaseDistributionResponse.json"><![CDATA[%dw 2.0
+
+type Covid19CaseDistributionResponseJSON = Array<{|  dateRep: String,   day: Number {"typeId": "int"},   month: Number {"typeId": "int"},   year: Number {"typeId": "int"},   cases: Number {"typeId": "int"},   deaths: Number {"typeId": "int"},   countriesAndTerritories: String,   geoId: String,   countryTerritoryCode: String,   popData2019: Number {"typeId": "int"},   continentExp: String,   cumulative14DaysCasesPer100000: Number {"typeId": "double"}|}> {"example": "[{\\\"dateRep\\\":\\\"2020-12-14\\\",\\\"day\\\":14,\\\"month\\\":12,\\\"year\\\":2020,\\\"cases\\\":746,\\\"deaths\\\":6,\\\"countriesAndTerritories\\\":\\\"Afghanistan\\\",\\\"geoId\\\":\\\"AF\\\",\\\"countryTerritoryCode\\\":\\\"AFG\\\",\\\"popData2019\\\":38041757,\\\"continentExp\\\":\\\"Asia\\\",\\\"cumulative14DaysCasesPer100000\\\":9.01377925},{\\\"dateRep\\\":\\\"2020-12-13\\\",\\\"day\\\":13,\\\"month\\\":12,\\\"year\\\":2020,\\\"cases\\\":331,\\\"deaths\\\":1,\\\"countriesAndTerritories\\\":\\\"Uruguay\\\",\\\"geoId\\\":\\\"UY\\\",\\\"countryTerritoryCode\\\":\\\"URY\\\",\\\"popData2019\\\":3461731,\\\"continentExp\\\":\\\"America\\\",\\\"cumulative14DaysCasesPer100000\\\":105.98743808}]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#a86ec0cf-59ab-46a4-8ce7-8b5aad313d83">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Covid19CaseDistributionResponseCSV"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="Covid19CaseDistributionResponseJSON"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

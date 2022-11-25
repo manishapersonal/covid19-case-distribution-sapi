@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<http:request-config
+		name="caseDistributionHTTPRequestConfig"
+		doc:name="HTTP Request configuration"
+		doc:id="b56c829f-5a06-4b53-861a-f138294c5e4f"
+		basePath="${caseDistributionApi.basePath}">
+		<http:request-connection
+			host="${caseDistributionApi.host}"
+			port="${caseDistributionApi.port}" protocol="HTTPS"/>
+	</http:request-config>
+	<jms:config
+		name="activeMQJMSConfig"
+		doc:name="JMS Config"
+		doc:id="a2fb0af6-48ca-41ed-8c7a-b899840365b8">
+		<jms:active-mq-connection username="${covid19CaseDistributionQueue.username}" password="${covid19CaseDistributionQueue.password}">
+			<jms:factory-configuration brokerUrl="${covid19CaseDistributionQueue.brokerUrl}" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow
+		name="get-covid19-case-distribution-flow"
+		doc:id="4bbeaed0-e87c-4032-b3bf-8488017e3267">
+		<logger level="INFO" doc:name="ENTRY" doc:id="9a810e3c-52f6-40ec-b7d8-88803bd8e2cc" message="ENTRY: #[flow.name]"/>
+		<http:request
+			method="GET"
+			doc:name="Get Covid19 Case Distribution"
+			doc:id="f4db6596-1fea-4067-bdcd-ec7099ba499f"
+			config-ref="caseDistributionHTTPRequestConfig"
+			path="${caseDistributionApi.path}"
+			outputMimeType="application/csv; streaming=true"/>
+		<ee:transform doc:name="Streaming Payload" doc:id="77ac6f3b-daf5-4592-91a3-1f90d55161ea" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+@StreamCapable()
+input payload application/csv
+output application/csv
+---
+
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="f2038d76-85eb-4d83-8771-549e4f0c212c" collection="#[payload]" batchSize="100">
+			<logger level="INFO" doc:name="Payload" doc:id="0840c4ff-a4f4-4cfb-b563-4d48195e029e" message="#[payload]"/>
+			<ee:transform doc:name="CSV To JSON" doc:id="a86ec0cf-59ab-46a4-8ce7-8b5aad313d83" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ((item,indexOfitem) -> {
+	"dateRep": item.dateRep[0] ,
+	"day": item.day[0],
+	"month": item.month[0],
+	"year": item.year[0],
+	"cases": item.cases[0] ,
+	"deaths": item.deaths[0],
+	"countriesAndTerritories": item.countriesAndTerritories[0],
+	"geoId": item.geoId[0],
+	"countryTerritoryCode": item.countryterritoryCode[0],
+	"popData2019": item.popData2019[0],
+	"continentExp": item.continentExp[0],
+	"cumulative14DaysCasesPer100000": item."Cumulative_number_for_14_days_of_COVID-19_cases_per_100000"[0]
+})]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<jms:publish doc:name="Publish To Covid19-Case-Distribution Queue" doc:id="a7f14a9b-da55-4566-95ca-5d8a80b96e94" config-ref="activeMQJMSConfig" sendCorrelationId="ALWAYS" destination="${covid19CaseDistributionQueue.name}"/>
+		</foreach>
+		<logger level="INFO" doc:name="EXIT" doc:id="0e733d12-1d91-4e7f-809a-48a405b83a57" message="EXIT: #[flow.name]"/>
+		<!-- <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+-&#45;&#45;
+[
+  {
+    dateRep: "2020-12-14",
+    day: 14,
+    month: 12,
+    year: 2020,
+    cases: 746,
+    deaths: 6,
+    countriesAndTerritories: "Afghanistan",
+    geoId: "AF",
+    countryTerritoryCode: "AFG",
+    popData2019: 38041757,
+    continentExp: "Asia",
+    cumulative14DaysCasesPer100000: 9.01377925
+  }, 
+  {
+    dateRep: "2020-12-13",
+    day: 13,
+    month: 12,
+    year: 2020,
+    cases: 331,
+    deaths: 1,
+    countriesAndTerritories: "Uruguay",
+    geoId: "UY",
+    countryTerritoryCode: "URY",
+    popData2019: 3461731,
+    continentExp: "America",
+    cumulative14DaysCasesPer100000: 105.98743808
+  }
+]]]></ee:set-payload>
+            </ee:message>
+        </ee:transform> -->
+	</flow>
+</mule>
