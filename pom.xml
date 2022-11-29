@@ -112,6 +112,12 @@
 			<artifactId>activemq-client</artifactId>
 			<version>5.16.4</version>
 		</dependency>
+		<dependency>
+			<groupId>com.mulesoft.connectors</groupId>
+			<artifactId>anypoint-mq-connector</artifactId>
+			<version>3.2.0</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
 	</dependencies>
 
 	<repositories>

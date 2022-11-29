@@ -21,9 +21,19 @@ caseDistributionApi:
   port: "443"
   basePath: "/covid19"
   path: "/casedistribution/csv/data.csv"
+ 
+##Apache Active MQ 
+//covid19CaseDistributionQueue:
+  //username: "admin"
+  //password: "admin"
+  //brokerUrl: "tcp://localhost:61616"
+  //name: "Covid19CaseDistributionQueue"
   
+##Anypoint MQ
 covid19CaseDistributionQueue:
-  username: "admin"
-  password: "admin"
-  brokerUrl: "tcp://localhost:61616"
   name: "Covid19CaseDistributionQueue"
+  url: "https://mq-us-east-1.anypoint.mulesoft.com/api/v1"
+  clientAppId: ""
+  clientSecret: ""
+
+  

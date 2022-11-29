@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <mule
+	xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq"
 	xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
 	xmlns:http="http://www.mulesoft.org/schema/mule/http"
 	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
 	xmlns="http://www.mulesoft.org/schema/mule/core"
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
-http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd">
 	<http:request-config
 		name="caseDistributionHTTPRequestConfig"
 		doc:name="HTTP Request configuration"
@@ -28,6 +29,9 @@ http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/
 			<jms:factory-configuration brokerUrl="${covid19CaseDistributionQueue.brokerUrl}" />
 		</jms:active-mq-connection>
 	</jms:config>
+	<anypoint-mq:config name="anypointMQConfig" doc:name="Anypoint MQ Config" doc:id="57ebfcfa-617d-44f0-8fb4-6a7efcb4bf89" >
+		<anypoint-mq:connection url="${covid19CaseDistributionQueue.url}" clientId="${covid19CaseDistributionQueue.clientAppId}" clientSecret="${covid19CaseDistributionQueue.clientSecret}"/>
+	</anypoint-mq:config>
 	<flow
 		name="get-covid19-case-distribution-flow"
 		doc:id="4bbeaed0-e87c-4032-b3bf-8488017e3267">
@@ -73,6 +77,7 @@ payload map ((item,indexOfitem) -> {
 })]]></ee:set-payload>
 				</ee:message>
 			</ee:transform>
+			<!-- <anypoint-mq:publish doc:name="Publish To Covid19CaseDistributionQueue" doc:id="9233f811-f610-47f9-b903-149d5870d602" config-ref="anypointMQConfig" destination="${covid19CaseDistributionQueue.name}"/> -->
 			<jms:publish doc:name="Publish To Covid19-Case-Distribution Queue" doc:id="a7f14a9b-da55-4566-95ca-5d8a80b96e94" config-ref="activeMQJMSConfig" sendCorrelationId="ALWAYS" destination="${covid19CaseDistributionQueue.name}"/>
 		</foreach>
 		<logger level="INFO" doc:name="EXIT" doc:id="0e733d12-1d91-4e7f-809a-48a405b83a57" message="EXIT: #[flow.name]"/>
