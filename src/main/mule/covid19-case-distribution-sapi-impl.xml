@@ -33,7 +33,7 @@ http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/m
 		<anypoint-mq:connection url="${covid19CaseDistributionQueue.url}" clientId="${covid19CaseDistributionQueue.clientAppId}" clientSecret="${covid19CaseDistributionQueue.clientSecret}"/>
 	</anypoint-mq:config>
 	<flow
-		name="get-covid19-case-distribution-flow"
+		name="get-covid19-case-distribution-sapi-flow"
 		doc:id="4bbeaed0-e87c-4032-b3bf-8488017e3267">
 		<logger level="INFO" doc:name="ENTRY" doc:id="9a810e3c-52f6-40ec-b7d8-88803bd8e2cc" message="ENTRY: #[flow.name]"/>
 		<http:request

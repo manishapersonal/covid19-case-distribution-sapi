@@ -28,6 +28,6 @@
 		<error-handler ref="api-console-error-handler" />
     </flow>
     <flow name="get:\covid19CaseDistribution:apiConfig">
-		<flow-ref doc:name="get-covid19-case-distribution-flow" doc:id="2b7c9e1b-8d84-4b0b-b8f7-babefe69ec75" name="get-covid19-case-distribution-flow"/>
+		<flow-ref doc:name="get-covid19-case-distribution-sapi-flow" doc:id="2b7c9e1b-8d84-4b0b-b8f7-babefe69ec75" name="get-covid19-case-distribution-sapi-flow"/>
     </flow>
 </mule>
