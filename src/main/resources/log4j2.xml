@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Configuration
+<!-- <Configuration
 	status="INFO"
 	name="cloudhub"
 	packages="com.mulesoft.ch.logging.appender, com.splunk.logging
-,org.apache.logging.log4j">
+,org.apache.logging.log4j">  -->
+<Configuration>
 
 	<!--These are some of the loggers you can enable. There are several more 
 		you can find in the documentation. Besides this log4j configuration, you 
