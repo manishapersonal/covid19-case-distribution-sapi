@@ -9,9 +9,9 @@ https:
     port: "8092"
     
 api:
-  id: "18326864"
+  id: "18350168"
   majorVersion: "v1"
-  groupId: "82dfac12-b94d-419e-8285-2a25c522ad8e"
+  groupId: "62123581-121b-4c73-bf9d-19d53054fb8e"
   artifactId: "covid19-case-distribution-sapi"
   version: "1.0.0"
   specification: "resource::${api.groupId}:${api.artifactId}:${api.version}:raml:zip:covid19-case-distribution-sapi.raml"
@@ -26,7 +26,7 @@ caseDistributionApi:
 covid19CaseDistributionQueue:
   username: "admin"
   password: "admin"
-  brokerUrl: "tcp://localhost:61616"
+  brokerUrl: "tcp://192.168.8.126:61616"
   name: "Covid19CaseDistributionQueue"
   
 ##Anypoint MQ
