@@ -36,13 +36,20 @@ http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/m
 		name="get-covid19-case-distribution-sapi-flow"
 		doc:id="4bbeaed0-e87c-4032-b3bf-8488017e3267">
 		<logger level="INFO" doc:name="ENTRY" doc:id="9a810e3c-52f6-40ec-b7d8-88803bd8e2cc" message="ENTRY: #[flow.name]"/>
-		<http:request
-			method="GET"
-			doc:name="Get Covid19 Case Distribution"
-			doc:id="f4db6596-1fea-4067-bdcd-ec7099ba499f"
-			config-ref="caseDistributionHTTPRequestConfig"
-			path="${caseDistributionApi.path}"
-			outputMimeType="application/csv; streaming=true"/>
+		<until-successful maxRetries="${caseDistributionApi.untilSuccessfull.maxRetries}" doc:name="Until Successful" doc:id="340ba112-9859-479a-b9a5-dbe19f795943" millisBetweenRetries="${caseDistributionApi.untilSuccessfull.timeInterval}">
+			<try doc:name="Try" doc:id="428a09d0-387d-4e73-a96e-53e389d3fe34" >
+			<http:request method="GET" doc:name="Get Covid19 Case Distribution" doc:id="1864ea7a-1ff2-433d-bfa4-58b25c2c2157" config-ref="caseDistributionHTTPRequestConfig" path="${caseDistributionApi.path}" outputMimeType="application/csv; streaming=true">
+				<http:response-validator>
+					<http:success-status-code-validator values="${caseDistributionApi.successStatusCode}" />
+				</http:response-validator>
+			</http:request>
+				<error-handler >
+            <on-error-continue doc:name="On Error Continue" type="HTTP:BAD_REQUEST, HTTP:FORBIDDEN, HTTP:METHOD_NOT_ALLOWED, HTTP:NOT_ACCEPTABLE, HTTP:NOT_FOUND, HTTP:UNAUTHORIZED" enableNotifications="true" logException="true">
+                <logger level="WARN" doc:name="Skip Retry" message='Skip Retry connecting to Case Distribution REST API'/>
+            </on-error-continue>
+        </error-handler>
+			</try>
+		</until-successful>
 		<ee:transform doc:name="Streaming Payload" doc:id="77ac6f3b-daf5-4592-91a3-1f90d55161ea" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
@@ -78,9 +85,27 @@ payload map ((item,indexOfitem) -> {
 				</ee:message>
 			</ee:transform>
 			<!-- <anypoint-mq:publish doc:name="Publish To Covid19CaseDistributionQueue" doc:id="9233f811-f610-47f9-b903-149d5870d602" config-ref="anypointMQConfig" destination="${covid19CaseDistributionQueue.name}"/> -->
-			<jms:publish doc:name="Publish To Covid19-Case-Distribution Queue" doc:id="a7f14a9b-da55-4566-95ca-5d8a80b96e94" config-ref="activeMQJMSConfig" sendCorrelationId="ALWAYS" destination="${covid19CaseDistributionQueue.name}" persistentDelivery="true"/>
+			<until-successful maxRetries="${covid19CaseDistributionQueue.untilSuccessfull.maxRetries}" doc:name="Until Successful" doc:id="3c2cf7d9-7219-4fd3-92df-1e2403cd8ba7" millisBetweenRetries="${covid19CaseDistributionQueue.untilSuccessfull.timeInterval}">
+				<try doc:name="Try" doc:id="a129f4c6-cae7-48bc-8a97-7dbda5da1de5" >
+					<jms:publish doc:name="Publish To Covid19-Case-Distribution Queue" doc:id="6ede46d1-c06a-4ddd-878c-21bb4654274c" config-ref="activeMQJMSConfig" sendCorrelationId="ALWAYS" destination="${covid19CaseDistributionQueue.name}" persistentDelivery="true">
+				<reconnect frequency="${jmsPublisher.reconnection.frequency}" count="${jmsPublisher.reconnection.maxAttempt}" />
+				<jms:message correlationId="#[attributes.headers.correlationId]" />
+			</jms:publish>
+					<error-handler >
+						<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="3936cb1f-80b0-4e53-aeb5-3e25ec43e79b" type="JMS:DESTINATION_NOT_FOUND, JMS:ILLEGAL_BODY">
+							<logger level="WARN" doc:name="Skip Retry" doc:id="eb4c1f1d-65d4-4e59-83c6-a08b8ba80094" message="Skip Retry connecting to Case Distribution Queue"/>
+						</on-error-continue>
+					</error-handler>
+				</try>
+			</until-successful>
 		</foreach>
 		<logger level="INFO" doc:name="EXIT" doc:id="0e733d12-1d91-4e7f-809a-48a405b83a57" message="EXIT: #[flow.name]"/>
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="be2184f3-1622-4ae7-8bb2-92dd8b5bee77" type="JMS:RETRY_EXHAUSTED,MULE:RETRY_EXHAUSTED">
+				<set-variable value="500" doc:name="httpStatus" doc:id="eaf21907-4347-4e46-a924-056ca0921179" variableName="httpStatus" />
+				<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;&#10;{&#10;	"errorCode": "500", &#10;	"errorMessage": "Retry connecting to Case Distribution REST/CaseDistribution JMS Queue"&#10;}]' doc:name="Set Payload" doc:id="0895414d-16e6-498f-9ea0-217a2d06334e" />
+			</on-error-propagate>
+		</error-handler>
 		<!-- <ee:transform>
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0

@@ -21,6 +21,11 @@ caseDistributionApi:
   port: "443"
   basePath: "/covid19"
   path: "/casedistribution/csv/data.csv"
+  successStatusCode: "200..299"
+  untilSuccessfull:
+    maxRetries: "3"
+    timeInterval: "30000"
+    
  
 ##Apache Active MQ 
 covid19CaseDistributionQueue:
@@ -28,6 +33,15 @@ covid19CaseDistributionQueue:
   password: "admin"
   brokerUrl: "tcp://192.168.8.126:61616"
   name: "Covid19CaseDistributionQueue"
+  untilSuccessfull:
+    maxRetries: "3"
+    timeInterval: "30000"
+
+jmsPublisher:
+  reconnection:
+    maxAttempt: "2"
+    frequency: "2000"
+    
   
 ##Anypoint MQ
 //covid19CaseDistributionQueue:
