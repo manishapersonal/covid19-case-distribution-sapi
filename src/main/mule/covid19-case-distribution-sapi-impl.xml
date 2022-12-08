@@ -36,23 +36,24 @@ http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/m
 		name="get-covid19-case-distribution-sapi-flow"
 		doc:id="4bbeaed0-e87c-4032-b3bf-8488017e3267">
 		<logger level="INFO" doc:name="ENTRY" doc:id="9a810e3c-52f6-40ec-b7d8-88803bd8e2cc" message="ENTRY: #[flow.name]"/>
-		<until-successful maxRetries="${caseDistributionApi.untilSuccessfull.maxRetries}" doc:name="Until Successful" doc:id="340ba112-9859-479a-b9a5-dbe19f795943" millisBetweenRetries="${caseDistributionApi.untilSuccessfull.timeInterval}">
-			<try doc:name="Try" doc:id="428a09d0-387d-4e73-a96e-53e389d3fe34" >
+		<async doc:name="Async" doc:id="e45f94ba-b12f-4a14-87f2-c873c464d0db" >
+			<until-successful maxRetries="${caseDistributionApi.untilSuccessfull.maxRetries}" doc:name="Until Successful" doc:id="340ba112-9859-479a-b9a5-dbe19f795943" millisBetweenRetries="${caseDistributionApi.untilSuccessfull.timeInterval}">
+			<try doc:name="Try" doc:id="428a09d0-387d-4e73-a96e-53e389d3fe34">
 			<http:request method="GET" doc:name="Get Covid19 Case Distribution" doc:id="1864ea7a-1ff2-433d-bfa4-58b25c2c2157" config-ref="caseDistributionHTTPRequestConfig" path="${caseDistributionApi.path}" outputMimeType="application/csv; streaming=true">
 				<http:response-validator>
 					<http:success-status-code-validator values="${caseDistributionApi.successStatusCode}" />
 				</http:response-validator>
 			</http:request>
-				<error-handler >
+				<error-handler>
             <on-error-continue doc:name="On Error Continue" type="HTTP:BAD_REQUEST, HTTP:FORBIDDEN, HTTP:METHOD_NOT_ALLOWED, HTTP:NOT_ACCEPTABLE, HTTP:NOT_FOUND, HTTP:UNAUTHORIZED" enableNotifications="true" logException="true">
-                <logger level="WARN" doc:name="Skip Retry" message='Skip Retry connecting to Case Distribution REST API'/>
+                <logger level="WARN" doc:name="Skip Retry" message="Skip Retry connecting to Case Distribution REST API" />
             </on-error-continue>
         </error-handler>
 			</try>
-		</until-successful>
-		<ee:transform doc:name="Streaming Payload" doc:id="77ac6f3b-daf5-4592-91a3-1f90d55161ea" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+			</until-successful>
+				<ee:transform doc:name="Streaming Payload" doc:id="77ac6f3b-daf5-4592-91a3-1f90d55161ea">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 @StreamCapable()
 input payload application/csv
 output application/csv
@@ -61,11 +62,11 @@ output application/csv
 payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<foreach doc:name="For Each" doc:id="f2038d76-85eb-4d83-8771-549e4f0c212c" collection="#[payload]" batchSize="100">
-			<logger level="INFO" doc:name="Payload" doc:id="0840c4ff-a4f4-4cfb-b563-4d48195e029e" message="#[payload]"/>
-			<ee:transform doc:name="CSV To JSON" doc:id="a86ec0cf-59ab-46a4-8ce7-8b5aad313d83" >
-				<ee:message >
-					<ee:set-payload ><![CDATA[%dw 2.0
+				<foreach doc:name="For Each" doc:id="f2038d76-85eb-4d83-8771-549e4f0c212c" collection="#[payload]" batchSize="100">
+			<logger level="INFO" doc:name="Payload" doc:id="0840c4ff-a4f4-4cfb-b563-4d48195e029e" message="#[payload]" />
+			<ee:transform doc:name="CSV To JSON" doc:id="a86ec0cf-59ab-46a4-8ce7-8b5aad313d83">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 payload map ((item,indexOfitem) -> {
@@ -86,19 +87,21 @@ payload map ((item,indexOfitem) -> {
 			</ee:transform>
 			<!-- <anypoint-mq:publish doc:name="Publish To Covid19CaseDistributionQueue" doc:id="9233f811-f610-47f9-b903-149d5870d602" config-ref="anypointMQConfig" destination="${covid19CaseDistributionQueue.name}"/> -->
 			<until-successful maxRetries="${covid19CaseDistributionQueue.untilSuccessfull.maxRetries}" doc:name="Until Successful" doc:id="3c2cf7d9-7219-4fd3-92df-1e2403cd8ba7" millisBetweenRetries="${covid19CaseDistributionQueue.untilSuccessfull.timeInterval}">
-				<try doc:name="Try" doc:id="a129f4c6-cae7-48bc-8a97-7dbda5da1de5" >
+				<try doc:name="Try" doc:id="a129f4c6-cae7-48bc-8a97-7dbda5da1de5">
 					<jms:publish doc:name="Publish To Covid19-Case-Distribution Queue" doc:id="6ede46d1-c06a-4ddd-878c-21bb4654274c" config-ref="activeMQJMSConfig" sendCorrelationId="ALWAYS" destination="${covid19CaseDistributionQueue.name}" persistentDelivery="true">
 				<reconnect frequency="${jmsPublisher.reconnection.frequency}" count="${jmsPublisher.reconnection.maxAttempt}" />
 				<jms:message correlationId="#[attributes.headers.correlationId]" />
 			</jms:publish>
-					<error-handler >
+					<error-handler>
 						<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="3936cb1f-80b0-4e53-aeb5-3e25ec43e79b" type="JMS:DESTINATION_NOT_FOUND, JMS:ILLEGAL_BODY">
-							<logger level="WARN" doc:name="Skip Retry" doc:id="eb4c1f1d-65d4-4e59-83c6-a08b8ba80094" message="Skip Retry connecting to Case Distribution Queue"/>
+							<logger level="WARN" doc:name="Skip Retry" doc:id="eb4c1f1d-65d4-4e59-83c6-a08b8ba80094" message="Skip Retry connecting to Case Distribution Queue" />
 						</on-error-continue>
 					</error-handler>
 				</try>
 			</until-successful>
 		</foreach>
+		
+		</async>
 		<logger level="INFO" doc:name="EXIT" doc:id="0e733d12-1d91-4e7f-809a-48a405b83a57" message="EXIT: #[flow.name]"/>
 		<error-handler>
 			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="be2184f3-1622-4ae7-8bb2-92dd8b5bee77" type="JMS:RETRY_EXHAUSTED,MULE:RETRY_EXHAUSTED">
